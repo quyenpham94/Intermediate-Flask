@@ -1,7 +1,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 
-GENERIC_IMG = "https://mylostpetalert.com/wp-content/themes/mlpa-child/images/nophoto.gif"
+GENERIC_IMG = "https://png.pngtree.com/png-clipart/20200701/original/pngtree-cat-default-avatar-png-image_5416936.jpg"
 
 db = SQLAlchemy()
 
@@ -27,3 +27,4 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+    
