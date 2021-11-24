@@ -6,3 +6,6 @@ from wtforms.validators import InputRequired
 class UserForm(FlaskForm):
     username = StringField("Username", validators=[InputRequired()])
     password = StringField("Password", validators=[InputRequired()])
+
+class TweetForm(FlaskForm):
+    text = StringField("Tweet Text", validators=[InputRequired()])

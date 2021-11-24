@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, session, flash
-from models import connect_db, db, User
-from forms import UserForm
+from models import connect_db, db, User, Tweet
+from forms import UserForm, TweetForm
 
 app = Flask(__name__)
 
@@ -16,9 +16,38 @@ connect_db(app)
 def home_page():
     return render_template('index.html')
 
-@app.route('/tweets')
+
+@app.route('/tweets', methods=["GET","POST"])
 def show_tweets():
-    return render_template("tweets.html")
+    if "user_id" not in session:
+        flash("Please login first")
+        return redirect('/')
+    form = TweetForm()
+    all_tweets = Tweet.query.all()
+    if form.validate_on_submit():
+        text = form.text.data
+        new_tweet = Tweet(text=text, user_id=session['user_id'])
+        db.session.add(new_tweet)
+        db.session.commit()
+        flash('Tweet Created!')
+        return redirect('/tweets')
+
+    return render_template("tweets.html", form=form, tweets=all_tweets)
+
+@app.route('/tweets/<int:id>', methods=["POST"])
+def delete_tweet(id):
+    """Delete tweet"""
+    if 'user_id' not in session:
+        flash("Please login first")
+        return redirect('/login')
+    tweet = Tweet.query.get_or_404(id)
+    if tweet.user_id == session['user_id']:
+        db.session.delete(tweet)
+        db.session.commit()
+        return redirect('/tweets')
+    flash("You dont have permission to do that!")
+    return redirect('/tweets')
+
 
 @app.route('/register', methods=['GET','POST'])
 def register_user():
@@ -30,6 +59,7 @@ def register_user():
 
         db.session.add(new_user)
         db.session.commit()
+        session['user_id'] = new_user.id
         flash('Welcome! Successfully Created Your Account! ')
         return redirect('/tweets')
 
@@ -45,8 +75,16 @@ def login_user():
 
         user = User.authenticate(username,password)
         if user:
+            flash(f"Welcome Back, {user.username}!")
+            session['user_id'] = user.id
             return redirect('/tweets')
         else:
             form.username.errors = ['Invalid username/password.']
 
     return render_template('login.html', form=form)
+
+@app.route('/logout')
+def logout_user():
+    session.pop('user_id')
+    flash("Goodbye!")
+    return redirect('/')
